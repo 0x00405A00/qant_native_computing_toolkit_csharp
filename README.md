@@ -2,6 +2,12 @@
 
 C#-Wrapper für das [Q.ANT native computing toolkit](https://github.com/Q-ANT-GmbH/qant_native_computing_toolkit) (C-API 2.3, DLPack 1.1) mit einer abstrahierten .NET-API, Tests und einer Blazor-Demo.
 
+> **Hinweis:** Dies ist ein **inoffizieller** Wrapper und kein Produkt der Q.ANT GmbH. Er wird nicht von Q.ANT entwickelt, geprüft oder unterstützt. „Q.ANT“ wird hier nur beschreibend verwendet, um das Toolkit zu benennen, für das der Wrapper gedacht ist.
+>
+> - Das [Q.ANT native computing toolkit](https://github.com/Q-ANT-GmbH/qant_native_computing_toolkit) steht unter Apache-2.0. Es und seine Bibliothek gehören nicht zu diesem Repository; sie werden nur geladen.
+> - Der **Treiber für die Q.ANT-Hardware** ist eine getrennte, proprietäre Komponente mit eigenen Bedingungen. Er liegt nicht in diesem Repository. Wer ihn nutzen will, braucht dafür eine Lizenz von Q.ANT.
+> - Die Beispiele und Tests in diesem Repository laufen auf dem CPU-Backend des Toolkits, einer Simulation. Aussagen über Geschwindigkeit, Energiebedarf oder Genauigkeit der Hardware lassen sich daraus nicht ableiten.
+
 - **16 Operationen** hinter einer Schnittstelle (`IQantDevice`): Linear, Conv2d, ConvTranspose2d, BatchNorm2d, Max-/Avg-/Adaptive-Pooling, ReLU, Sigmoid, Softmax, Bias, KAN-Schicht u. a., dazu Diagnose (Treiberinfo, Sensoren, Performance-Counter).
 - **Eigene Typen** `BFloat16` und `Tensor` (row-major), Marshalling über DLPack ohne Kopie auf der Eingabeseite.
 - **Getestet gegen das CPU-Backend** des Toolkits (44 Tests). Auf Q.ANT-Hardware wurde nichts getestet.
@@ -15,6 +21,8 @@ C#-Wrapper für das [Q.ANT native computing toolkit](https://github.com/Q-ANT-Gm
 - [Tests](#tests)
 - [Einschränkungen](#einschränkungen)
 - [Dokumentation (ADRs)](#dokumentation-adrs)
+- [Danksagung](#danksagung)
+- [Lizenz](#lizenz)
 
 ## Voraussetzung: native Bibliothek
 
@@ -176,6 +184,10 @@ Die Entscheidungen stehen als ADRs in [`docs/adr/`](docs/adr), die zugehörigen 
 | 0007 | Teststrategie: Unit-Tests plus CPU-Backend-Integrationstests |
 
 Die ADRs wurden nachträglich geschrieben. Den Status `Full Acceptance (Final)` haben sie auf Anweisung des Projektinhabers erhalten, ohne dass Security- und Compliance-Review durchgeführt wurden (siehe Prüfnachweise in den Plänen). Das Trainingsbeispiel hat kein eigenes ADR.
+
+## Danksagung
+
+Ein herzlicher Dank an die **Q.ANT GmbH** für die Forschung und Entwicklung photonischer Prozessoren für KI. Mit ihnen soll KI-Rechnen energieeffizienter und leistungsfähiger werden als auf herkömmlichen NPUs. Dass das zugehörige Toolkit offen unter Apache-2.0 verfügbar ist, hat diesen Wrapper erst möglich gemacht. Ob und in welchem Maß die Hardware diesen Anspruch einlöst, haben wir mit diesem Repository nicht gemessen.
 
 ## Lizenz
 
