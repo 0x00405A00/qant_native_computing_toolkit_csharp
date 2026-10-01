@@ -179,4 +179,4 @@ Die ADRs wurden nachträglich geschrieben. Den Status `Full Acceptance (Final)` 
 
 ## Lizenz
 
-Die Paketmetadaten nennen Apache-2.0 (wie das Toolkit). Eine `LICENSE`-Datei liegt diesem Repository noch nicht bei.
+Apache License 2.0, siehe [LICENSE](LICENSE) (unveränderter Standardtext). Das Q.ANT native computing toolkit selbst steht ebenfalls unter Apache-2.0 und gehört nicht zu diesem Repository; die Bibliothek wird nur geladen.
