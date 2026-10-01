@@ -1,0 +1,12 @@
+@inject Qant.BlazorDemo.Services.QantService Qant
+
+@if (Qant.Error is { } e)
+{
+    <div class="alert alert-danger">
+        <strong>Toolkit nicht verfügbar:</strong> @e.GetType().Name – @e.Message
+        <div class="small mt-1">
+            Library-Pfad: <code>@(Qant.LibraryPath ?? "<Standard-Suchpfad>")</code><br />
+            Setze <code>Qant:LibraryPath</code> in <code>appsettings.json</code> oder die Umgebungsvariable <code>QANT_NATIVE_LIB_PATH</code>.
+        </div>
+    </div>
+}

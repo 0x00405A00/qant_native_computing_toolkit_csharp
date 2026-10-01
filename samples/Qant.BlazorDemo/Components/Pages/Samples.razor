@@ -1,0 +1,77 @@
+@page "/samples"
+@using System.Diagnostics
+@using Qant.BlazorDemo.Samples
+@inject Qant.BlazorDemo.Services.QantService Qant
+
+<PageTitle>Samples</PageTitle>
+
+<h1>Samples</h1>
+<QantStatus />
+
+@foreach (var s in DemoSamples.All)
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="h5 card-title">@s.Title</h2>
+            <p class="card-text">@s.Description</p>
+            @foreach (var op in s.Operations) { <HintView Operation="@op" /> }
+            <button class="btn btn-primary btn-sm" @onclick="() => Execute(s)">Ausführen</button>
+
+            @if (_results.TryGetValue(s.Id, out var r))
+            {
+                @if (r.Error is not null)
+                {
+                    <div class="alert alert-danger mt-3 mb-0">@r.Error</div>
+                }
+                else if (r.Result is { } res)
+                {
+                    <p class="mt-3 mb-1 small text-muted">Dauer: @res.Elapsed.TotalMilliseconds.ToString("0.00") ms</p>
+                    @if (res.Run.Note is not null) { <p class="small">@res.Run.Note</p> }
+                    <div class="tensor-row">
+                        @foreach (var i in res.Run.Inputs) { <TensorView Name="@i.Name" Value="@i.Value" /> }
+                    </div>
+                    <hr />
+                    <div class="tensor-row">
+                        @foreach (var o in res.Run.Outputs)
+                        {
+                            <div>
+                                <TensorView Name="@o.Name" Value="@o.Value" />
+                                @if (res.MaxAbsError.TryGetValue(o.Name, out var err))
+                                {
+                                    <span class="badge @(err < 0.05 ? "bg-success" : "bg-warning text-dark")">max. Abweichung @err.ToString("0.0000")</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private record Outcome(SampleResult? Result, string? Error);
+    private readonly Dictionary<string, Outcome> _results = new();
+
+    private void Execute(DemoSample sample)
+    {
+        try
+        {
+            var sw = Stopwatch.StartNew();
+            var run = Qant.Run(dev => sample.Run(dev, Qant.IsCpuBackend));
+            sw.Stop();
+
+            var errors = new Dictionary<string, double>();
+            foreach (var o in run.Outputs.Where(o => o.Expected is not null))
+            {
+                var actual = o.Value.ToSingleArray();
+                errors[o.Name] = actual.Zip(o.Expected!, (a, e) => Math.Abs((double)a - e)).DefaultIfEmpty(0).Max();
+            }
+            _results[sample.Id] = new(new SampleResult(sample, run, sw.Elapsed, errors), null);
+        }
+        catch (Exception e)
+        {
+            _results[sample.Id] = new(null, $"{e.GetType().Name}: {e.Message}");
+        }
+    }
+}

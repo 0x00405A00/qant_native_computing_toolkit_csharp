@@ -1,0 +1,47 @@
+@using Qant.NativeComputing
+
+<div class="tensor">
+    <div class="tensor-title"><strong>@Name</strong> <span class="text-muted">[@string.Join(" × ", Value.Shape.ToArray())]</span></div>
+    @foreach (var (label, rows, cols, offset) in Slices())
+    {
+        <table class="table table-sm table-bordered tensor-grid">
+            @if (label is not null) { <caption>@label</caption> }
+            @for (int r = 0; r < rows; r++)
+            {
+                <tr>
+                    @for (int c = 0; c < cols; c++)
+                    {
+                        <td>@Format(Value.Data[offset + r * cols + c])</td>
+                    }
+                </tr>
+            }
+        </table>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
+    [Parameter, EditorRequired] public Tensor Value { get; set; } = default!;
+
+    private static string Format(BFloat16 v) => v.ToSingle().ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+
+    // The last two dimensions form the grid; leading dimensions enumerate slices.
+    private IEnumerable<(string? label, int rows, int cols, int offset)> Slices()
+    {
+        var shape = Value.Shape.ToArray();
+        if (shape.Length == 1) { yield return (null, 1, shape[0], 0); yield break; }
+        int rows = shape[^2], cols = shape[^1], size = rows * cols, count = Value.Length / size;
+        for (int s = 0; s < count; s++)
+        {
+            string? label = null;
+            if (shape.Length > 2)
+            {
+                var idx = new int[shape.Length - 2];
+                int rem = s;
+                for (int d = idx.Length - 1; d >= 0; d--) { idx[d] = rem % shape[d]; rem /= shape[d]; }
+                label = "[" + string.Join(", ", idx) + ", :, :]";
+            }
+            yield return (label, rows, cols, s * size);
+        }
+    }
+}

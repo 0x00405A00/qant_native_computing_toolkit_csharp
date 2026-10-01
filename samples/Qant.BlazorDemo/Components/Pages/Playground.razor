@@ -1,0 +1,74 @@
+@page "/playground"
+@using Qant.NativeComputing
+@inject Qant.BlazorDemo.Services.QantService Qant
+
+<PageTitle>Playground</PageTitle>
+
+<h1>Playground</h1>
+<p>Eigene Vektoren (Komma- oder Leerzeichen-getrennt, Dezimalpunkt) durch eine Operation schicken. Werte werden zu bfloat16 gerundet.</p>
+<QantStatus />
+
+<div class="row g-3 mb-3" style="max-width: 48rem">
+    <div class="col-12 col-md-4">
+        <label class="form-label">Operation</label>
+        <select class="form-select" @bind="_op">
+            @foreach (var o in Ops) { <option value="@o">@o</option> }
+        </select>
+    </div>
+    <div class="col-12 col-md-8">
+        <label class="form-label">Vektor u</label>
+        <input class="form-control" @bind="_u" />
+    </div>
+    @if (_op is "Multiply" or "ScaledPeriodicNonlinearity")
+    {
+        <div class="col-12">
+            <label class="form-label">Vektor v (gleiche Länge)</label>
+            <input class="form-control" @bind="_v" />
+        </div>
+    }
+</div>
+
+<HintView Operation="@_op" />
+
+<button class="btn btn-primary" @onclick="Run">Ausführen</button>
+
+@if (_error is not null) { <div class="alert alert-danger mt-3">@_error</div> }
+@if (_result is not null)
+{
+    <div class="mt-3"><TensorView Name="Ergebnis" Value="@_result" /></div>
+}
+
+@code {
+    private static readonly string[] Ops = ["Relu", "Sigmoid", "Softmax", "Multiply", "ScaledPeriodicNonlinearity"];
+    private string _op = "Relu";
+    private string _u = "-2, -0.5, 0, 0.5, 1, 2";
+    private string _v = "1, 1, 1, 1, 1, 1";
+    private Tensor? _result;
+    private string? _error;
+
+    private static float[] Parse(string text)
+    {
+        var parts = text.Split([',', ' ', ';', '\t'], StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) throw new FormatException("Leere Eingabe.");
+        return parts.Select(p => float.Parse(p, System.Globalization.CultureInfo.InvariantCulture)).ToArray();
+    }
+
+    private void Run()
+    {
+        _error = null; _result = null;
+        try
+        {
+            var u = Tensor.FromArray(Parse(_u));
+            Tensor? v = _op is "Multiply" or "ScaledPeriodicNonlinearity" ? Tensor.FromArray(Parse(_v)) : null;
+            _result = Qant.Run(dev => _op switch
+            {
+                "Relu" => dev.Relu(u),
+                "Sigmoid" => dev.Sigmoid(u),
+                "Softmax" => dev.Softmax(Tensor.FromArray(u.ToSingleArray(), 1, u.Length)),
+                "Multiply" => dev.Multiply(u, v!),
+                _ => dev.ScaledPeriodicNonlinearity(u, v!),
+            });
+        }
+        catch (Exception e) { _error = $"{e.GetType().Name}: {e.Message}"; }
+    }
+}

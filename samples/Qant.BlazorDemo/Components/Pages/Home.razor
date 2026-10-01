@@ -1,0 +1,45 @@
+@page "/"
+@using Qant.NativeComputing
+@inject Qant.BlazorDemo.Services.QantService Qant
+
+<PageTitle>Q.ANT Demo</PageTitle>
+
+<h1>Q.ANT native computing toolkit – Demo</h1>
+<p>Blazor-Oberfläche für den C#-Wrapper <code>Qant.NativeComputing</code>. Unter <a href="samples">Samples</a> laufen fertige Beispiele, unter <a href="playground">Playground</a> eigene Eingaben.</p>
+
+<QantStatus />
+
+<button class="btn btn-primary mb-3" @onclick="Load">Geräte und Diagnose laden</button>
+
+@if (_devices is not null)
+{
+    <h2 class="h5">Verfügbare NPUs</h2>
+    <table class="table table-sm w-auto">
+        <thead><tr><th>Id</th><th>Seriennummer</th></tr></thead>
+        <tbody>
+            @foreach (var d in _devices) { <tr><td>@d.Id</td><td>@d.SerialNumber</td></tr> }
+        </tbody>
+    </table>
+    <h2 class="h5">Treiber</h2>
+    <pre>@_driver</pre>
+    <h2 class="h5">Version</h2>
+    <pre>@_version</pre>
+    <h2 class="h5">Performance-Counter</h2>
+    <pre>@_perf</pre>
+}
+
+@code {
+    private IReadOnlyList<NpuDescriptor>? _devices;
+    private string? _driver, _version, _perf;
+
+    private void Load()
+    {
+        try
+        {
+            _devices = Qant.ListDevices();
+            (_driver, _version, _perf) = Qant.Run(d => (
+                d.GetDriverInfo(), d.GetVersionInfo().ToString(), d.GetPerformanceCounters().ToString()));
+        }
+        catch (Exception) { _devices = null; } // shown by <QantStatus />
+    }
+}

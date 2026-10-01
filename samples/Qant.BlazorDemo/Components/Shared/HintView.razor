@@ -1,0 +1,16 @@
+@using Qant.BlazorDemo.Samples
+
+@if (OperationHints.All.TryGetValue(Operation, out var h))
+{
+    <div class="hint">
+        <div><strong>@h.Operation</strong> – <span class="hint-label">Hinweis:</span> @h.SuitableFor</div>
+        <ul class="mb-1">
+            @foreach (var e in h.Examples) { <li>@e</li> }
+        </ul>
+        @if (h.Limits is not null) { <div class="small text-muted">Grenzen: @h.Limits</div> }
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public string Operation { get; set; } = "";
+}

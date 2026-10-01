@@ -1,0 +1,75 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ADR-Manager (Python)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/docs/adr-management/adr_manager.py",
+      "python": "${workspaceFolder}/docs/adr-management/venv/bin/python",
+      "cwd": "${workspaceFolder}/docs/adr-management",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Qant Sample (CPU-Backend)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-sample",
+      "program": "${workspaceFolder}/samples/Qant.Sample/bin/Debug/net8.0/Qant.Sample.dll",
+      "cwd": "${workspaceFolder}/samples/Qant.Sample",
+      "env": {
+        "QANT_NATIVE_LIB_PATH": "${workspaceFolder}/native/libqant_native_computing_toolkit.so"
+      },
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Qant Sample (installierte Library / Hardware)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-sample",
+      "program": "${workspaceFolder}/samples/Qant.Sample/bin/Debug/net8.0/Qant.Sample.dll",
+      "cwd": "${workspaceFolder}/samples/Qant.Sample",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Qant Blazor Demo (CPU-Backend)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-blazor",
+      "program": "${workspaceFolder}/samples/Qant.BlazorDemo/bin/Debug/net10.0/Qant.BlazorDemo.dll",
+      "cwd": "${workspaceFolder}/samples/Qant.BlazorDemo",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5080",
+        "QANT_NATIVE_LIB_PATH": "${workspaceFolder}/native/libqant_native_computing_toolkit.so"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Qant Blazor Demo (installierte Library / Hardware)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-blazor",
+      "program": "${workspaceFolder}/samples/Qant.BlazorDemo/bin/Debug/net10.0/Qant.BlazorDemo.dll",
+      "cwd": "${workspaceFolder}/samples/Qant.BlazorDemo",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5080"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    }
+  ]
+}

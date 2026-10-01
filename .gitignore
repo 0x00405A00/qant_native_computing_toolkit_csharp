@@ -1,0 +1,47 @@
+# .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.nupkg
+*.snupkg
+
+# Tests / coverage
+TestResults/
+coverage/
+*.trx
+*.coverage
+
+# IDE
+.vs/
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+*.user
+*.suo
+.idea/
+*.swp
+
+# Native toolkit builds (ausführbare Binärdateien gehören nicht ins Repository;
+# neu bauen: cargo build --release --no-default-features -F cpu-backend, siehe ADR-0007)
+native/*.so
+native/*.dll
+native/*.dylib
+
+# Python (ADR-Manager)
+docs/adr-management/venv/
+__pycache__/
+*.pyc
+docs/adr-management/config.json
+
+# Claude Code (Skills, Agents, Regeln, Hooks: lokal, nicht Teil des Repositories)
+.claude/
+
+# Logs
+logs/
+*.log
+
+# Secrets
+.env
+*.pfx
+*.snk
