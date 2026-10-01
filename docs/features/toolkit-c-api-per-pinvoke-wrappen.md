@@ -44,10 +44,10 @@ Je Status bewertet eine Rolle (siehe Skill `adr-workflow`, Schritt 6). Ergebnis 
 | --- | --- | --- | --- | --- |
 | Implemented | software-engineer | 2026-10-01 | Build ohne Warnungen und Fehler; 42 Tests grün (CPU-Backend) | siehe offene Punkte |
 | Implemented | code-review | | nicht durchgeführt | |
-| Implementation Tested and Acceptance | software-tester | | | |
-| Security Review | it-security | | | |
-| GDPR/Compliance Review | it-compliance | | | |
-| Full Acceptance (Final) | software-architekt, Projektinhaber | | | |
+| Implementation Tested and Acceptance | software-tester | 2026-10-01 | Testlauf gegen CPU-Backend: 42 von 42 grün (Commit 2eceeae). Abnahme durch den Projektinhaber auf ausdrückliche Anweisung. | siehe offene Punkte (Hardware ungetestet) |
+| Security Review | it-security | 2026-10-01 | nicht durchgeführt; Status auf ausdrückliche Anweisung des Projektinhabers gesetzt | keine Bewertung vorhanden |
+| GDPR/Compliance Review | it-compliance | 2026-10-01 | nicht durchgeführt; Status auf ausdrückliche Anweisung des Projektinhabers gesetzt | keine Bewertung vorhanden |
+| Full Acceptance (Final) | software-architekt, Projektinhaber | 2026-10-01 | Endabnahme durch den Projektinhaber auf ausdrückliche Anweisung; kein Gesamtabgleich durch software-architekt | Security- und Compliance-Review offen |
 
 ## 5. Offene Punkte
 

@@ -65,3 +65,16 @@ h1:focus {
 
 .hint { background: #f3f7fb; border-left: 4px solid #1b6ec2; padding: .5rem .75rem; margin: .5rem 0; font-size: .9rem; }
 .hint-label { font-weight: 600; color: #1b6ec2; }
+
+.plot { width: 100%; max-width: 360px; border: 1px solid #ccc; background: #fff; }
+.plot.chart { max-height: 220px; }
+.cls-0 { --c: #1b6ec2; } .cls-1 { --c: #d9534f; } .cls-2 { --c: #2e9e5b; }
+.plot .bg { fill: var(--c); opacity: .22; }
+.plot .dot { fill: var(--c); stroke: #fff; stroke-width: .6; }
+.line-loss { stroke: #d9534f; stroke-width: 2; }
+.line-acc { stroke: #1b6ec2; stroke-width: 2; }
+.legend { display: inline-block; width: 1.2rem; height: 3px; vertical-align: middle; }
+.line-loss-key { background: #d9534f; } .line-acc-key { background: #1b6ec2; }
+
+.plot .test { fill: #fff; stroke: var(--c); stroke-width: 1.8; }
+.plot .wrong { fill: none; stroke: #000; stroke-width: 1.6; }

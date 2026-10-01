@@ -1,0 +1,260 @@
+@page "/training"
+@implements IDisposable
+@using System.Globalization
+@using Qant.BlazorDemo.Samples
+@inject Qant.BlazorDemo.Services.QantService Qant
+
+<PageTitle>Training</PageTitle>
+
+<h1>Training: Spiralen lernen</h1>
+<QantStatus />
+
+<div class="hint">
+    <div><span class="hint-label">Was soll dieser Test bewirken?</span></div>
+    <div class="mt-1"><strong>Ausgangslage</strong></div>
+    <ul class="mb-1">
+        <li>Drei ineinander verschlungene Spiralen aus Punkten mit zwei Koordinaten (x, y), jede Spirale ist eine Klasse. Keine gerade Linie trennt sie.</li>
+        <li>Das Netz startet mit zufälligen Gewichten und rät: Die Genauigkeit liegt um 33 % (Zufall bei drei Klassen), der Loss bei etwa 1,1 (ln 3).</li>
+        <li>Das Toolkit kann nur vorwärts rechnen, einen Trainingsschritt gibt es darin nicht.</li>
+    </ul>
+    <div><strong>Ziel</strong></div>
+    <ul class="mb-1">
+        <li>Der Loss fällt deutlich, und die Testgenauigkeit steigt klar über 85 %. Der automatische Test im Projekt prüft genau das: Loss unter der Hälfte des Startwerts und Testgenauigkeit über 85 % nach 150 Epochen (32 Neuronen, Batch 30, 100 Punkte je Klasse). Mit den hier voreingestellten 100 Epochen ist das nicht gesondert geprüft; es gilt als Richtwert.</li>
+        <li>Die Testgenauigkeit zählt, weil sie auf neuen Punkten gemessen wird, die das Netz nie gesehen hat. Liegt sie weit unter der Trainingsgenauigkeit, hat das Netz auswendig gelernt.</li>
+        <li>Die Entscheidungsgrenze soll den Spiralarmen folgen, statt eine Fläche zu verschmieren.</li>
+        <li>Nachweis, dass sich mit den vorhandenen Vorwärts-Operatoren ein Training aufbauen lässt, und wie viel die bfloat16-Rundung gegenüber float32 kostet (Kontrollzeile unter der Anzeige).</li>
+    </ul>
+    <div><strong>Wie die Einstellungen das Ergebnis beeinflussen</strong></div>
+    <div class="small text-muted mb-1">Gemessen auf dem CPU-Backend, je ein Lauf mit festem Zufallswert, jeweils ein Parameter geändert und die übrigen auf den Voreinstellungen. Angegeben ist die Testgenauigkeit. Mit anderen Daten oder Zufallswerten können die Zahlen abweichen.</div>
+    <ul class="mb-1">
+        <li><strong>Epochen</strong> (Durchläufe durch alle Daten): 5 → 86 %, 20 → 94 %, ab 50 → 99 %. Danach sinkt noch der Loss (0,06 bei 100, 0,03 bei 300), die Testgenauigkeit kaum noch. Zu wenige Epochen heißt: das Netz ist noch nicht fertig gelernt.</li>
+        <li><strong>Lernrate</strong> (Schrittweite): 0,001 → 60 % (zu klein, lernt kaum), 0,01 → 95 %, 0,1 bis 0,5 → 99 %. Bei 2 <em>divergiert</em> das Training: Der Loss wird NaN, die Genauigkeit fällt auf 33 %.</li>
+        <li><strong>Versteckte Neuronen</strong> (Kapazität): 2 → 59 %, 4 → 76 %, ab 8 → 99 %. Mehr (128) bringt hier keinen Gewinn, nur mehr Rechenzeit. Zu wenige Neuronen können die Spiralarme nicht abbilden.</li>
+        <li><strong>Batchgröße</strong> (Datensätze je Schritt): 1 → 48 % (die Schritte sind zu verrauscht für Lernrate 0,1 mit Momentum 0,9), 10 bis 100 → 97 bis 99 %, 300 (alle Daten auf einmal) → 92 %, weil es dann nur wenige Schritte je Epoche gibt.</li>
+        <li><strong>Punkte je Klasse</strong> (Datenmenge): 20 → 98 % Test bei 100 % Training, das ist die Neigung zum Auswendiglernen; ab 50 → 99 %. Mehr Daten machen das Ergebnis stabiler und das Training länger.</li>
+        <li><strong>Momentum</strong> (Trägheit der Schritte): 0 → 94 %, 0,5 → 98 %, 0,9 → 99 %. Bei 0,99 divergiert das Training wie bei zu hoher Lernrate. Lernrate und Momentum wirken zusammen: Beide hoch zugleich ist riskant.</li>
+        <li><strong>bfloat16 gegen float32:</strong> In allen stabilen Läufen weicht die Testgenauigkeit des Geräts von der Host-Kontrolle um höchstens 2 Prozentpunkte ab, meist 0 bis 1.</li>
+    </ul>
+    <div><strong>Woran man die Testgenauigkeit im Spiralenbild erkennt</strong></div>
+    <ul class="mb-1">
+        <li><strong>Hintergrundfarbe</strong> = die Klasse, die das Netz an dieser Stelle vorhersagt.</li>
+        <li><strong>Gefüllte Punkte</strong> sind Trainingsdaten. <strong>Hohle Kreise</strong> sind Testpunkte, die nie zum Lernen benutzt wurden. Nur sie zeigen die Testgenauigkeit.</li>
+        <li><strong>Richtig erkannt:</strong> Der Kreis hat dieselbe Farbe wie der Hintergrund darunter. <strong>Falsch erkannt:</strong> Der Kreis liegt auf einer anderen Farbe und trägt einen schwarzen Ring.</li>
+        <li>Testgenauigkeit = Anteil der Kreise ohne schwarzen Ring. Die Zahl über dem Bild („x von y falsch“) zählt genau das.</li>
+        <li><strong>Wo die Fehler liegen:</strong> Fast immer nahe der Bildmitte, wo die Spiralarme am dichtesten liegen. In meinen Messläufen lagen 6 von 8, 8 von 9, 5 von 6 und 2 von 2 Fehlern innerhalb des Radius 0,4, obwohl dort nur 40 % der Testpunkte liegen. Außen sind die Arme breit genug getrennt.</li>
+        <li><strong>Guter Zustand:</strong> Die Farbfelder folgen den Spiralarmen, und kaum ein Kreis ist beringt. <strong>Auswendiglernen:</strong> Gefüllte Punkte sind alle richtig, aber viele Kreise beringt, oder um einzelne Trainingspunkte bilden sich kleine Farbinseln. <strong>Noch nicht gelernt:</strong> Große, glatte Farbflächen ohne Spiralform, viele Ringe.</li>
+        <li><strong>Einschränkung:</strong> Der Hintergrund ist ein grobes 30×30-Raster, jede Zelle wird in ihrer Mitte bewertet. Ob ein Punkt als richtig oder falsch zählt, entscheidet das Netz direkt an der Position des Punktes. Direkt an einer Grenze kann ein Punkt deshalb auf der „falschen“ Zellfarbe liegen und trotzdem richtig gezählt sein.</li>
+    </ul>
+    <div class="small text-muted">Das ist eine Demonstration auf kleinen Daten, kein Maßstab für Geschwindigkeit oder Genauigkeit auf der Hardware.</div>
+</div>
+
+<div class="hint">
+    <div><span class="hint-label">Wie geht das, wenn das Toolkit nur Vorwärtsrechnung kann?</span></div>
+    <ul class="mb-1">
+        <li><strong>Vorwärts auf dem Gerät:</strong> <code>Linear</code>, <code>AddBias</code>, <code>Relu</code>, <code>Softmax</code> (je Datensatz, das Toolkit erlaubt nur die Form 1×N).</li>
+        <li><strong>Rückwärts in C#:</strong> Die Matrixprodukte der Gradienten laufen wieder über <code>Linear</code> (mit transponierten Argumenten), die ReLU-Ableitung über <code>Multiply</code>. Loss, Bias-Gradienten und Optimizer (SGD mit Momentum) rechnet der Host.</li>
+        <li><strong>Gewichte</strong> liegen als float32 auf dem Host; das Gerät sieht sie auf bfloat16 gerundet.</li>
+    </ul>
+    <div class="small text-muted">Ob sich das auf der echten Hardware genauso verhält (Rauschen, kosinusähnliche Nichtlinearität bei KAN), ist hier nicht geprüft; das CPU-Backend simuliert nur ideale Rechnung.</div>
+</div>
+
+<div class="row g-3 mb-3" style="max-width: 52rem">
+    <div class="col-6 col-md-3"><label class="form-label">Epochen</label><input type="number" class="form-control" @bind="_epochs" min="1" max="1000" disabled="@_running" /></div>
+    <div class="col-6 col-md-3"><label class="form-label">Lernrate</label><input type="number" step="0.01" class="form-control" @bind="_lr" disabled="@_running" /></div>
+    <div class="col-6 col-md-3"><label class="form-label">Versteckte Neuronen</label><input type="number" class="form-control" @bind="_hidden" min="2" max="256" disabled="@_running" /></div>
+    <div class="col-6 col-md-3"><label class="form-label">Batchgröße</label><input type="number" class="form-control" @bind="_batch" min="1" max="300" disabled="@_running" /></div>
+    <div class="col-6 col-md-3"><label class="form-label">Punkte je Klasse</label><input type="number" class="form-control" @bind="_perClass" min="20" max="500" disabled="@_running" /></div>
+    <div class="col-6 col-md-3"><label class="form-label">Momentum</label><input type="number" step="0.05" class="form-control" @bind="_momentum" disabled="@_running" /></div>
+</div>
+
+<button class="btn btn-primary me-2" @onclick="Start" disabled="@_running">Training starten</button>
+<button class="btn btn-outline-secondary" @onclick="Stop" disabled="@(!_running)">Stoppen</button>
+
+@if (_error is not null) { <div class="alert alert-danger mt-3">@_error</div> }
+
+@if (_history.Count > 0)
+{
+    var last = _history[^1];
+    <p class="mt-3 mb-1">
+        Epoche <strong>@last.Epoch</strong> / @_epochsRun ·
+        Loss <strong>@last.Loss.ToString("0.000", CultureInfo.InvariantCulture)</strong> ·
+        Genauigkeit Training <strong>@last.TrainAcc.ToString("P0")</strong>,
+        Test <strong>@last.TestAcc.ToString("P0")</strong> ·
+        @_elapsed.TotalSeconds.ToString("0.0") s
+    </p>
+    @if (_hostAcc is not null)
+    {
+        <p class="small text-muted">
+            Kontrolle mit denselben Gewichten in reinem float32 auf dem Host: Test <strong>@_hostAcc.Value.ToString("P0")</strong>
+            (Gerät: @last.TestAcc.ToString("P0")). Der Unterschied ist der Einfluss von bfloat16.
+        </p>
+    }
+
+    <div class="tensor-row">
+        <div>
+            <div class="tensor-title"><strong>Entscheidungsgrenze</strong> <span class="text-muted">(vom Gerät berechnet)</span></div>
+            <div class="small mb-1">@TestSummary()</div>
+            <svg viewBox="0 0 @Size @Size" class="plot" role="img" aria-label="Entscheidungsgrenze">
+                @if (_grid is not null)
+                {
+                    for (int gy = 0; gy < Grid; gy++)
+                    {
+                        for (int gx = 0; gx < Grid; gx++)
+                        {
+                            <rect x="@(gx * Cell)" y="@(gy * Cell)" width="@Cell" height="@Cell" class="cls-@_grid[gy * Grid + gx] bg" />
+                        }
+                    }
+                }
+                @for (int i = 0; i < _y.Length; i++)
+                {
+                    <circle cx="@Px(_x[i * 2])" cy="@Py(_x[i * 2 + 1])" r="2.6" class="cls-@_y[i] dot" />
+                }
+                @for (int i = 0; i < _ty.Length && i < _testPred.Length; i++)
+                {
+                    <circle cx="@Px(_tx[i * 2])" cy="@Py(_tx[i * 2 + 1])" r="3.4" class="cls-@_ty[i] test" />
+                    @if (_testPred[i] != _ty[i])
+                    {
+                        <circle cx="@Px(_tx[i * 2])" cy="@Py(_tx[i * 2 + 1])" r="6" class="wrong" />
+                    }
+                }
+            </svg>
+            <div class="small">
+                <svg width="12" height="12" class="align-middle"><circle cx="6" cy="6" r="3" fill="#555" /></svg> Training
+                &nbsp; <svg width="12" height="12" class="align-middle"><circle cx="6" cy="6" r="3.5" fill="#fff" stroke="#555" stroke-width="1.6" /></svg> Test
+                &nbsp; <svg width="14" height="14" class="align-middle"><circle cx="7" cy="7" r="5.5" fill="none" stroke="#000" stroke-width="1.6" /></svg> falsch erkannt
+            </div>
+        </div>
+        <div>
+            <div class="tensor-title"><strong>Loss und Genauigkeit je Epoche</strong></div>
+            <svg viewBox="0 0 @Size 200" class="plot chart" role="img" aria-label="Verlauf">
+                <polyline points="@Line(h => h.Loss, LossMax)" class="line-loss" fill="none" />
+                <polyline points="@Line(h => h.TestAcc, 1)" class="line-acc" fill="none" />
+            </svg>
+            <div class="small"><span class="legend line-loss-key"></span> Loss (Skala 0–@LossMax.ToString("0.0", CultureInfo.InvariantCulture)) &nbsp; <span class="legend line-acc-key"></span> Testgenauigkeit (0–100 %)</div>
+        </div>
+    </div>
+}
+
+@code {
+    private const int Size = 300, Grid = 30, Cell = Size / Grid;
+    private record EpochStat(int Epoch, float Loss, double TrainAcc, double TestAcc);
+
+    private int _epochs = 100, _hidden = 32, _batch = 30, _perClass = 100;
+    private float _lr = 0.1f, _momentum = 0.9f;
+    private bool _running;
+    private string? _error;
+    private int _epochsRun;
+    private double? _hostAcc;
+    private TimeSpan _elapsed;
+    private readonly List<EpochStat> _history = new();
+    private float[] _x = [];
+    private int[] _y = [];
+    private float[] _tx = [];
+    private int[] _ty = [], _testPred = [];
+    private int[]? _grid;
+    private CancellationTokenSource? _cts;
+
+    private float LossMax => _history.Count == 0 ? 1 : MathF.Max(1f, _history[0].Loss * 1.05f);
+    private static string Px(float v) => ((v + 1.2f) / 2.4f * Size).ToString("0.#", CultureInfo.InvariantCulture);
+    private static string Py(float v) => ((1.2f - v) / 2.4f * Size).ToString("0.#", CultureInfo.InvariantCulture);
+
+    private string Line(Func<EpochStat, double> value, double max)
+    {
+        if (_history.Count < 2) return "";
+        return string.Join(" ", _history.Select((h, i) =>
+        {
+            double px = (double)i / Math.Max(1, _epochsRun - 1) * Size;
+            double py = 195 - Math.Clamp(value(h) / max, 0, 1) * 190;
+            return $"{px.ToString("0.#", CultureInfo.InvariantCulture)},{py.ToString("0.#", CultureInfo.InvariantCulture)}";
+        }));
+    }
+
+    private async Task Start()
+    {
+        _error = null; _history.Clear(); _grid = null; _hostAcc = null;
+        _cts = new CancellationTokenSource();
+        _running = true;
+        _epochsRun = Math.Clamp(_epochs, 1, 1000);
+        var token = _cts.Token;
+        int perClass = Math.Clamp(_perClass, 20, 500), batch = Math.Clamp(_batch, 1, perClass * 3);
+        int hidden = Math.Clamp(_hidden, 2, 256);
+        float lr = _lr, momentum = _momentum;
+        int epochs = _epochsRun;
+        try
+        {
+            await Task.Run(async () =>
+            {
+                const int classes = 3;
+                var (x, y) = SpiralDataset.Generate(perClass, classes, 0.1f, 1);
+                var (tx, ty) = SpiralDataset.Generate(Math.Max(20, perClass / 2), classes, 0.1f, 2);
+                _x = x; _y = y; _tx = tx; _ty = ty;
+                var mlp = new MlpTrainer(SpiralDataset.Dimensions, hidden, classes, seed: 7);
+                var gridPoints = new float[Grid * Grid * 2];
+                for (int gy = 0; gy < Grid; gy++)
+                    for (int gx = 0; gx < Grid; gx++)
+                    {
+                        gridPoints[(gy * Grid + gx) * 2] = (gx + 0.5f) / Grid * 2.4f - 1.2f;
+                        gridPoints[(gy * Grid + gx) * 2 + 1] = 1.2f - (gy + 0.5f) / Grid * 2.4f;
+                    }
+
+                var order = Enumerable.Range(0, y.Length).ToArray();
+                var rng = new Random(5);
+                var started = System.Diagnostics.Stopwatch.StartNew();
+
+                for (int epoch = 1; epoch <= epochs && !token.IsCancellationRequested; epoch++)
+                {
+                    rng.Shuffle(order);
+                    double lossSum = 0; int steps = 0;
+                    for (int s = 0; s < order.Length && !token.IsCancellationRequested; s += batch)
+                    {
+                        int count = Math.Min(batch, order.Length - s);
+                        var xb = new float[count * 2]; var yb = new int[count];
+                        for (int i = 0; i < count; i++)
+                        {
+                            int src = order[s + i];
+                            xb[i * 2] = x[src * 2]; xb[i * 2 + 1] = x[src * 2 + 1]; yb[i] = y[src];
+                        }
+                        // one lock per step so other pages can use the device in between
+                        lossSum += Qant.Run(dev => mlp.Step(dev, xb, yb, lr, momentum)); steps++;
+                    }
+
+                    var (trainPred, testPred, grid) = Qant.Run(dev => (
+                        mlp.PredictDevice(dev, x, y.Length),
+                        mlp.PredictDevice(dev, tx, ty.Length),
+                        epoch % 5 == 0 || epoch == epochs ? mlp.PredictDevice(dev, gridPoints, Grid * Grid) : null));
+                    float meanLoss = (float)(lossSum / Math.Max(1, steps));
+                    if (!float.IsFinite(meanLoss))
+                    {
+                        _error = "Das Training ist divergiert (Loss ist NaN oder unendlich). Lernrate oder Momentum verkleinern.";
+                        break;
+                    }
+                    _history.Add(new EpochStat(epoch, meanLoss,
+                        Accuracy(trainPred, y), Accuracy(testPred, ty)));
+                    if (grid is not null) _grid = grid;
+                    _testPred = testPred;
+                    _elapsed = started.Elapsed;
+                    _hostAcc = Accuracy(mlp.PredictHost(tx, ty.Length), ty);
+                    await InvokeAsync(StateHasChanged);
+                    await Task.Delay(1);
+                }
+                _grid ??= Qant.Run(dev => mlp.PredictDevice(dev, gridPoints, Grid * Grid));
+            });
+        }
+        catch (Exception e) { _error = $"{e.GetType().Name}: {e.Message}"; }
+        finally { _running = false; }
+    }
+
+    private string TestSummary()
+    {
+        if (_testPred.Length == 0 || _testPred.Length != _ty.Length) return "";
+        int wrong = _testPred.Zip(_ty, (p, t) => p != t ? 1 : 0).Sum();
+        return $"Testpunkte: {wrong} von {_ty.Length} falsch erkannt (Testgenauigkeit {(1.0 - (double)wrong / _ty.Length):P0})";
+    }
+
+    private static double Accuracy(int[] pred, int[] truth) =>
+        pred.Zip(truth, (p, t) => p == t ? 1.0 : 0.0).Average();
+
+    private void Stop() => _cts?.Cancel();
+
+    public void Dispose() { _cts?.Cancel(); _cts?.Dispose(); }
+}

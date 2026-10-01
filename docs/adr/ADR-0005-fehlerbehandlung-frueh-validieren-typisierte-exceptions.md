@@ -1,9 +1,10 @@
 # ADR-0005 – Fehlerbehandlung: früh validieren, typisierte Exceptions
 
-**Status:** Implemented
+**Status:** Full Acceptance (Final)
 **Datum:** 2026-10-01
 **Entscheider:** 
 **Implementierungsplan:** [fehlerbehandlung-frueh-validieren-typisierte-exceptions.md](../features/fehlerbehandlung-frueh-validieren-typisierte-exceptions.md)
+**Commit:** 2eceeae
 
 ## Kontext
 *Nachträglich dokumentiert (2026-10-01): Die Entscheidung wurde beim Bau des Wrappers ohne eigenes ADR getroffen. Die erwogenen Alternativen sind aus dem Ergebnis rekonstruiert, nicht aus damaligen Unterlagen belegt.*

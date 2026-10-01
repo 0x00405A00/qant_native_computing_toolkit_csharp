@@ -36,7 +36,7 @@ Nicht umgesetzt: die als deprecated markierten `mul_npu_f32` / `mul_npu_i16`.
 ## Demo-Anwendungen
 
 - `samples/Qant.Sample` – Konsole (Linear, ReLU, MaxPool)
-- `samples/Qant.BlazorDemo` – Blazor Server (net10.0): Geräte-/Diagnose-Seite, 6 Samples mit Referenzvergleich (Linear, Aktivierungen, Conv2d, Pooling, BatchNorm2d, KAN) und ein Playground für eigene Vektoren.
+- `samples/Qant.BlazorDemo` – Blazor Server (net10.0): Geräte-/Diagnose-Seite, 6 Samples mit Referenzvergleich (Linear, Aktivierungen, Conv2d, Pooling, BatchNorm2d, KAN) und ein Playground für eigene Vektoren und eine Trainingsseite (MLP lernt Spiralen: Vorwärts auf dem Gerät, Rückwärts in C#).
   Start in VS Code über das Debug-Profil „Qant Blazor Demo (CPU-Backend)“ (http://localhost:5080) oder
   `QANT_NATIVE_LIB_PATH=native/libqant_native_computing_toolkit.so dotnet run --project samples/Qant.BlazorDemo`.
   Der Library-Pfad lässt sich auch über `Qant:LibraryPath` in `appsettings.json` setzen.

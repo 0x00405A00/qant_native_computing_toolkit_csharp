@@ -1,9 +1,10 @@
 # ADR-0001 – Toolkit-C-API per P/Invoke wrappen
 
-**Status:** Implemented
+**Status:** Full Acceptance (Final)
 **Datum:** 2026-10-01
 **Entscheider:** 
 **Implementierungsplan:** [toolkit-c-api-per-pinvoke-wrappen.md](../features/toolkit-c-api-per-pinvoke-wrappen.md)
+**Commit:** 2eceeae
 
 ## Kontext
 *Nachträglich dokumentiert (2026-10-01): Die Entscheidung wurde beim Bau des Wrappers ohne eigenes ADR getroffen. Die erwogenen Alternativen sind aus dem Ergebnis rekonstruiert, nicht aus damaligen Unterlagen belegt.*

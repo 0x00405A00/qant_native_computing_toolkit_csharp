@@ -1,9 +1,10 @@
 # ADR-0004 – Eigene Typen BFloat16 und Tensor
 
-**Status:** Implemented
+**Status:** Full Acceptance (Final)
 **Datum:** 2026-10-01
 **Entscheider:** 
 **Implementierungsplan:** [eigene-typen-bfloat16-und-tensor.md](../features/eigene-typen-bfloat16-und-tensor.md)
+**Commit:** 2eceeae
 
 ## Kontext
 *Nachträglich dokumentiert (2026-10-01): Die Entscheidung wurde beim Bau des Wrappers ohne eigenes ADR getroffen. Die erwogenen Alternativen sind aus dem Ergebnis rekonstruiert, nicht aus damaligen Unterlagen belegt.*
